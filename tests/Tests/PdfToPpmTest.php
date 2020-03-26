@@ -8,21 +8,24 @@
 
 namespace Wb\PdfToPpm;
 
-use Symfony\Component\HttpFoundation\File\MimeType\MimeTypeGuesser;
+use PHPUnit\Framework\TestCase;
+use Symfony\Component\Mime\FileBinaryMimeTypeGuesser;
+use Symfony\Component\Mime\MimeTypes;
 use Wb\PdfToPpm\Exception\RuntimeException;
 
-class PdfToPpmTest extends \PHPUnit_Framework_TestCase
+//class PdfToPpmTest extends \PHPUnit_Framework_TestCase
+class PdfToPpmTest extends TestCase
 {
     /**
      * @var PdfToPpm
      */
     private $pdfToPpm;
 
-    public function setUp()
+    public function setUp() : void
     {
-        $this->pdfToPpm = PdfToPpm::create(array(
+        $this->pdfToPpm = PdfToPpm::create([
             'pdftoppm.binaries' => getenv('binary')
-        ));
+        ]);
     }
 
     public function testConvertPdfOnePages()
@@ -42,10 +45,11 @@ class PdfToPpmTest extends \PHPUnit_Framework_TestCase
     public function testConvertPdfAsPpm()
     {
         $result = $this->pdfToPpm->convertPdf(dirname(__DIR__) . '/Resources/test_1_page.pdf', null);
-
-        $mimeTypeGuesser = MimeTypeGuesser::getInstance();
-        $mimeType = $mimeTypeGuesser->guess($result->current()->getPathName());
-
+        
+        $mimeTypeGuesser = new MimeTypes;
+        $mimeTypeGuesser->registerGuesser(new FileBinaryMimeTypeGuesser());
+        $mimeType = $mimeTypeGuesser->guessMimeType($result->current()->getPathName());
+        
         $this->assertSame('image/x-portable-pixmap', $mimeType);
     }
 
@@ -53,8 +57,8 @@ class PdfToPpmTest extends \PHPUnit_Framework_TestCase
     {
         $result = $this->pdfToPpm->convertPdf(dirname(__DIR__) . '/Resources/test_1_page.pdf', null, true);
 
-        $mimeTypeGuesser = MimeTypeGuesser::getInstance();
-        $mimeType = $mimeTypeGuesser->guess($result->current()->getPathName());
+        $mimeTypeGuesser = new MimeTypes;
+        $mimeType = $mimeTypeGuesser->guessMimeType($result->current()->getPathName());
 
         $this->assertSame('image/png', $mimeType);
     }
